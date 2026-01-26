@@ -16,6 +16,7 @@ let timeLeft = GAME_DURATION;
 let score = 0;
 let gameInterval, timerInterval;
 let grassTexture = null; // Cache for grass texture
+let wordsCompleted = 0; // Track progression for difficulty scaling
 
 // Word list for the game
 const WORD_LIST = ['APPLE', 'BANANA', 'ORANGE', 'GRAPE', 'MELON', 'PEACH', 'LEMON', 'CHERRY'];
@@ -388,9 +389,9 @@ function initGame() {
         letters.push(new Letter(pos.x, pos.y, char));
     }
     
-    // Create NPCs
+    // Create NPCs based on progression (1-3 NPCs)
     npcs = [];
-    const npcCount = 3;
+    const npcCount = Math.min(1 + Math.floor(wordsCompleted / 2), 3); // Start with 1, add 1 every 2 words, max 3
     for (let i = 0; i < npcCount; i++) {
         const pos = getFreePosition();
         npcs.push(new NPC(pos.x, pos.y));
@@ -405,6 +406,9 @@ function startGame() {
     document.getElementById('restartBtn').style.display = 'none';
     document.getElementById('gameMessage').style.display = 'none';
     document.getElementById('gameMessage').className = 'game-message';
+    
+    // Reset progression on new game session
+    wordsCompleted = 0;
     
     initGame();
     
@@ -556,6 +560,8 @@ function updateUI() {
     document.getElementById('collectedLetters').textContent = collectedLetters.join('') || '-';
     document.getElementById('timeLeft').textContent = timeLeft;
     document.getElementById('score').textContent = score;
+    document.getElementById('level').textContent = wordsCompleted + 1;
+    document.getElementById('npcCount').textContent = npcs.length;
 }
 
 // End game
@@ -573,6 +579,7 @@ function endGame(won, message) {
     
     if (won) {
         score += timeLeft * 10; // Bonus for remaining time
+        wordsCompleted++; // Increment word completion count for difficulty scaling
         updateUI();
     }
 }

@@ -64,6 +64,10 @@ h1 {
     color: #ffc107;
 }
 
+.level {
+    color: #9c27b0;
+}
+
 #gameCanvas {
     display: block;
     margin: 0 auto;
