@@ -15,14 +15,43 @@ let collectedLetters = [];
 let timeLeft = GAME_DURATION;
 let score = 0;
 let gameInterval, timerInterval;
+let grassTexture = null; // Cache for grass texture
 
 // Word list for the game
 const WORD_LIST = ['APPLE', 'BANANA', 'ORANGE', 'GRAPE', 'MELON', 'PEACH', 'LEMON', 'CHERRY'];
+
+// Generate grass texture once and cache it
+function generateGrassTexture() {
+    if (grassTexture) return grassTexture;
+    
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = CANVAS_WIDTH;
+    tempCanvas.height = CANVAS_HEIGHT;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // Base grass color
+    tempCtx.fillStyle = '#7CB342';
+    tempCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    // Add grass texture variation
+    for (let i = 0; i < 200; i++) {
+        const x = Math.random() * CANVAS_WIDTH;
+        const y = Math.random() * CANVAS_HEIGHT;
+        tempCtx.fillStyle = Math.random() > 0.5 ? '#8BC34A' : '#689F38';
+        tempCtx.fillRect(x, y, 2, 2);
+    }
+    
+    grassTexture = tempCanvas;
+    return grassTexture;
+}
 
 // Initialize game
 document.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
+    
+    // Generate grass texture
+    generateGrassTexture();
     
     document.getElementById('startBtn').addEventListener('click', startGame);
     document.getElementById('restartBtn').addEventListener('click', restartGame);
@@ -47,7 +76,6 @@ class Player {
     draw() {
         const px = this.x * GRID_SIZE;
         const py = this.y * GRID_SIZE;
-        const s = 4; // pixel size for pixel art
         
         // Draw pixel art player character (green outfit)
         // Head outline
@@ -405,17 +433,8 @@ function restartGame() {
 function gameLoop() {
     if (gameState !== 'playing') return;
     
-    // Draw background with grass texture
-    ctx.fillStyle = '#7CB342';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    
-    // Add grass texture variation
-    for (let i = 0; i < 200; i++) {
-        const x = Math.random() * CANVAS_WIDTH;
-        const y = Math.random() * CANVAS_HEIGHT;
-        ctx.fillStyle = Math.random() > 0.5 ? '#8BC34A' : '#689F38';
-        ctx.fillRect(x, y, 2, 2);
-    }
+    // Draw background with cached grass texture
+    ctx.drawImage(grassTexture, 0, 0);
     
     // Draw a vertical road in the middle
     const roadX = Math.floor(GRID_COLS / 2) * GRID_SIZE - GRID_SIZE;
@@ -560,17 +579,8 @@ function endGame(won, message) {
 
 // Draw idle screen
 function drawIdleScreen() {
-    // Draw background similar to game
-    ctx.fillStyle = '#7CB342';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    
-    // Add grass texture
-    for (let i = 0; i < 200; i++) {
-        const x = Math.random() * CANVAS_WIDTH;
-        const y = Math.random() * CANVAS_HEIGHT;
-        ctx.fillStyle = Math.random() > 0.5 ? '#8BC34A' : '#689F38';
-        ctx.fillRect(x, y, 2, 2);
-    }
+    // Draw background with cached grass texture
+    ctx.drawImage(grassTexture, 0, 0);
     
     ctx.fillStyle = '#333';
     ctx.font = 'bold 40px Arial';
