@@ -45,11 +45,35 @@ class Player {
     }
     
     draw() {
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x * GRID_SIZE + 2, this.y * GRID_SIZE + 2, this.size, this.size);
-        ctx.fillStyle = 'white';
-        ctx.font = '20px Arial';
-        ctx.fillText('P', this.x * GRID_SIZE + 12, this.y * GRID_SIZE + 28);
+        const px = this.x * GRID_SIZE;
+        const py = this.y * GRID_SIZE;
+        const s = 4; // pixel size for pixel art
+        
+        // Draw pixel art player character (green outfit)
+        // Head outline
+        ctx.fillStyle = '#000';
+        ctx.fillRect(px + 12, py + 4, 16, 16);
+        // Face
+        ctx.fillStyle = '#ffcc99';
+        ctx.fillRect(px + 14, py + 6, 12, 12);
+        // Eyes
+        ctx.fillStyle = '#000';
+        ctx.fillRect(px + 16, py + 10, 3, 3);
+        ctx.fillRect(px + 23, py + 10, 3, 3);
+        // Hair/hood
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(px + 10, py + 2, 20, 6);
+        ctx.fillRect(px + 8, py + 6, 24, 4);
+        // Body (green)
+        ctx.fillStyle = '#4CAF50';
+        ctx.fillRect(px + 10, py + 20, 20, 12);
+        // Arms
+        ctx.fillRect(px + 6, py + 22, 4, 8);
+        ctx.fillRect(px + 30, py + 22, 4, 8);
+        // Legs
+        ctx.fillStyle = '#2E7D32';
+        ctx.fillRect(px + 14, py + 32, 6, 6);
+        ctx.fillRect(px + 22, py + 32, 6, 6);
     }
     
     move(dx, dy) {
@@ -84,11 +108,40 @@ class NPC {
     }
     
     draw() {
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x * GRID_SIZE + 2, this.y * GRID_SIZE + 2, this.size, this.size);
-        ctx.fillStyle = 'white';
-        ctx.font = '20px Arial';
-        ctx.fillText('👻', this.x * GRID_SIZE + 8, this.y * GRID_SIZE + 28);
+        const px = this.x * GRID_SIZE;
+        const py = this.y * GRID_SIZE;
+        
+        // Draw pixel art monster/creature
+        // Body
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(px + 8, py + 16, 24, 20);
+        // Head
+        ctx.fillRect(px + 10, py + 8, 20, 12);
+        // Ears
+        ctx.fillRect(px + 8, py + 6, 6, 8);
+        ctx.fillRect(px + 26, py + 6, 6, 8);
+        // Eyes (angry)
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(px + 12, py + 10, 6, 4);
+        ctx.fillRect(px + 22, py + 10, 6, 4);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(px + 14, py + 11, 3, 3);
+        ctx.fillRect(px + 24, py + 11, 3, 3);
+        // Mouth
+        ctx.fillStyle = '#000';
+        ctx.fillRect(px + 16, py + 16, 8, 2);
+        // Teeth
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(px + 16, py + 18, 2, 3);
+        ctx.fillRect(px + 20, py + 18, 2, 3);
+        ctx.fillRect(px + 24, py + 18, 2, 3);
+        // Arms
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(px + 4, py + 20, 4, 10);
+        ctx.fillRect(px + 32, py + 20, 4, 10);
+        // Legs
+        ctx.fillRect(px + 12, py + 36, 6, 4);
+        ctx.fillRect(px + 22, py + 36, 6, 4);
     }
     
     chase() {
@@ -149,28 +202,87 @@ class Letter {
     draw() {
         if (this.collected) return;
         
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x * GRID_SIZE + 2, this.y * GRID_SIZE + 2, this.size, this.size);
-        ctx.fillStyle = '#333';
-        ctx.font = 'bold 24px Arial';
+        const px = this.x * GRID_SIZE;
+        const py = this.y * GRID_SIZE;
+        
+        // Draw pixel art letter on ground
+        // Shadow/base
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(px + 4, py + 34, 32, 4);
+        
+        // Letter background (golden shoe/item style)
+        ctx.fillStyle = '#D4A574';
+        ctx.fillRect(px + 6, py + 18, 28, 16);
+        ctx.fillStyle = '#F4C794';
+        ctx.fillRect(px + 8, py + 20, 24, 12);
+        
+        // Letter itself with pixel art style
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 20px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(this.char, this.x * GRID_SIZE + GRID_SIZE / 2, this.y * GRID_SIZE + 30);
+        ctx.fillText(this.char, px + GRID_SIZE / 2, py + 30);
         ctx.textAlign = 'left';
+        
+        // Shine effect
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(px + 10, py + 22, 4, 2);
     }
 }
 
 // Obstacle class
 class Obstacle {
-    constructor(x, y) {
+    constructor(x, y, type) {
         this.x = x;
         this.y = y;
         this.size = GRID_SIZE - 4;
-        this.color = '#5f6368';
+        this.type = type || Math.floor(Math.random() * 3); // 0: tree, 1: house, 2: rock
     }
     
     draw() {
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x * GRID_SIZE + 2, this.y * GRID_SIZE + 2, this.size, this.size);
+        const px = this.x * GRID_SIZE;
+        const py = this.y * GRID_SIZE;
+        
+        if (this.type === 0) {
+            // Tree
+            // Trunk
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(px + 16, py + 24, 8, 12);
+            // Leaves (3D effect)
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(px + 8, py + 12, 24, 16);
+            ctx.fillStyle = '#32CD32';
+            ctx.fillRect(px + 10, py + 8, 20, 12);
+            ctx.fillRect(px + 12, py + 14, 16, 12);
+            // Highlight
+            ctx.fillStyle = '#90EE90';
+            ctx.fillRect(px + 14, py + 10, 8, 6);
+        } else if (this.type === 1) {
+            // House
+            // Base
+            ctx.fillStyle = '#D2691E';
+            ctx.fillRect(px + 8, py + 20, 24, 16);
+            // Roof
+            ctx.fillStyle = '#4682B4';
+            ctx.fillRect(px + 6, py + 14, 28, 8);
+            ctx.fillRect(px + 8, py + 10, 24, 6);
+            // Window
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(px + 14, py + 24, 6, 6);
+            ctx.fillRect(px + 22, py + 24, 6, 6);
+            // Door
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(px + 17, py + 30, 6, 6);
+        } else {
+            // Rock/Boulder
+            ctx.fillStyle = '#696969';
+            ctx.fillRect(px + 10, py + 20, 20, 14);
+            ctx.fillRect(px + 12, py + 18, 16, 4);
+            ctx.fillRect(px + 8, py + 22, 4, 8);
+            ctx.fillRect(px + 28, py + 24, 4, 8);
+            // Highlight
+            ctx.fillStyle = '#A9A9A9';
+            ctx.fillRect(px + 14, py + 22, 8, 6);
+        }
     }
 }
 
@@ -293,12 +405,32 @@ function restartGame() {
 function gameLoop() {
     if (gameState !== 'playing') return;
     
-    // Clear canvas
-    ctx.fillStyle = '#e8f5e9';
+    // Draw background with grass texture
+    ctx.fillStyle = '#7CB342';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
-    // Draw grid - optimized to use single path
-    ctx.strokeStyle = '#c8e6c9';
+    // Add grass texture variation
+    for (let i = 0; i < 200; i++) {
+        const x = Math.random() * CANVAS_WIDTH;
+        const y = Math.random() * CANVAS_HEIGHT;
+        ctx.fillStyle = Math.random() > 0.5 ? '#8BC34A' : '#689F38';
+        ctx.fillRect(x, y, 2, 2);
+    }
+    
+    // Draw a vertical road in the middle
+    const roadX = Math.floor(GRID_COLS / 2) * GRID_SIZE - GRID_SIZE;
+    ctx.fillStyle = '#757575';
+    ctx.fillRect(roadX, 0, GRID_SIZE * 2, CANVAS_HEIGHT);
+    
+    // Road lines
+    ctx.fillStyle = '#fff';
+    for (let y = 0; y < CANVAS_HEIGHT; y += 40) {
+        ctx.fillRect(roadX + GRID_SIZE - 2, y, 4, 20);
+    }
+    
+    // Draw grid - lighter for better visibility
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 0.5;
     ctx.beginPath();
     for (let x = 0; x <= GRID_COLS; x++) {
         ctx.moveTo(x * GRID_SIZE, 0);
@@ -309,6 +441,7 @@ function gameLoop() {
         ctx.lineTo(CANVAS_WIDTH, y * GRID_SIZE);
     }
     ctx.stroke();
+    ctx.lineWidth = 1;
     
     // Draw obstacles
     obstacles.forEach(obs => obs.draw());
@@ -427,8 +560,17 @@ function endGame(won, message) {
 
 // Draw idle screen
 function drawIdleScreen() {
-    ctx.fillStyle = '#e8f5e9';
+    // Draw background similar to game
+    ctx.fillStyle = '#7CB342';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    // Add grass texture
+    for (let i = 0; i < 200; i++) {
+        const x = Math.random() * CANVAS_WIDTH;
+        const y = Math.random() * CANVAS_HEIGHT;
+        ctx.fillStyle = Math.random() > 0.5 ? '#8BC34A' : '#689F38';
+        ctx.fillRect(x, y, 2, 2);
+    }
     
     ctx.fillStyle = '#333';
     ctx.font = 'bold 40px Arial';
