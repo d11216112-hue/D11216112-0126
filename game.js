@@ -115,18 +115,21 @@ class NPC {
         const newX = this.x + moveX;
         const newY = this.y + moveY;
         
-        // Only move if not obstacle
+        // Only move if not obstacle and within bounds
         if (!isObstacle(newX, newY) && 
             newX >= 0 && newX < GRID_COLS && 
             newY >= 0 && newY < GRID_ROWS) {
             this.x = newX;
             this.y = newY;
         } else {
-            // Try alternative move
-            if (moveX !== 0 && !isObstacle(this.x, this.y + (dy > 0 ? 1 : -1))) {
-                this.y += dy > 0 ? 1 : -1;
-            } else if (moveY !== 0 && !isObstacle(this.x + (dx > 0 ? 1 : -1), this.y)) {
-                this.x += dx > 0 ? 1 : -1;
+            // Try alternative move with boundary checking
+            const altY = this.y + (dy > 0 ? 1 : -1);
+            const altX = this.x + (dx > 0 ? 1 : -1);
+            
+            if (moveX !== 0 && altY >= 0 && altY < GRID_ROWS && !isObstacle(this.x, altY)) {
+                this.y = altY;
+            } else if (moveY !== 0 && altX >= 0 && altX < GRID_COLS && !isObstacle(altX, this.y)) {
+                this.x = altX;
             }
         }
     }
@@ -194,12 +197,22 @@ function isPositionOccupied(x, y) {
 function getFreePosition() {
     let pos;
     let attempts = 0;
+    const maxAttempts = 100;
+    
     do {
         pos = getRandomPosition();
         attempts++;
-        if (attempts > 100) {
-            // Fallback to ensure we don't infinite loop
-            return { x: Math.floor(Math.random() * GRID_COLS), y: Math.floor(Math.random() * GRID_ROWS) };
+        if (attempts > maxAttempts) {
+            // Scan grid for first free position as last resort
+            for (let y = 0; y < GRID_ROWS; y++) {
+                for (let x = 0; x < GRID_COLS; x++) {
+                    if (!isPositionOccupied(x, y)) {
+                        return { x, y };
+                    }
+                }
+            }
+            // If truly no space, return random (edge case)
+            return getRandomPosition();
         }
     } while (isPositionOccupied(pos.x, pos.y));
     return pos;
@@ -284,20 +297,18 @@ function gameLoop() {
     ctx.fillStyle = '#e8f5e9';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
-    // Draw grid
+    // Draw grid - optimized to use single path
     ctx.strokeStyle = '#c8e6c9';
+    ctx.beginPath();
     for (let x = 0; x <= GRID_COLS; x++) {
-        ctx.beginPath();
         ctx.moveTo(x * GRID_SIZE, 0);
         ctx.lineTo(x * GRID_SIZE, CANVAS_HEIGHT);
-        ctx.stroke();
     }
     for (let y = 0; y <= GRID_ROWS; y++) {
-        ctx.beginPath();
         ctx.moveTo(0, y * GRID_SIZE);
         ctx.lineTo(CANVAS_WIDTH, y * GRID_SIZE);
-        ctx.stroke();
     }
+    ctx.stroke();
     
     // Draw obstacles
     obstacles.forEach(obs => obs.draw());
@@ -351,9 +362,7 @@ function handleKeyPress(e) {
             break;
     }
     
-    if (moved) {
-        checkCollisions();
-    }
+    // Collision check happens in game loop, no need to duplicate here
 }
 
 // Check collisions
