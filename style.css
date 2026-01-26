@@ -1,0 +1,146 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 900px;
+    width: 100%;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.game-info {
+    margin-bottom: 20px;
+}
+
+.info-panel {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    background: #f7f7f7;
+    padding: 15px;
+    border-radius: 10px;
+    gap: 15px;
+}
+
+.info-panel > div {
+    font-size: 1.1em;
+}
+
+.target-word {
+    color: #667eea;
+}
+
+.collected-letters {
+    color: #28a745;
+}
+
+.timer {
+    color: #dc3545;
+}
+
+.score {
+    color: #ffc107;
+}
+
+#gameCanvas {
+    display: block;
+    margin: 0 auto;
+    border: 3px solid #333;
+    border-radius: 10px;
+    background: #e8f5e9;
+    max-width: 100%;
+    height: auto;
+}
+
+.controls {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.controls p {
+    margin: 10px 0;
+    color: #555;
+}
+
+button {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.1em;
+    border-radius: 25px;
+    cursor: pointer;
+    margin: 10px 5px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+button:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.game-message {
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    display: none;
+}
+
+.game-message.win {
+    display: block;
+    background: #d4edda;
+    color: #155724;
+    border: 2px solid #28a745;
+}
+
+.game-message.lose {
+    display: block;
+    background: #f8d7da;
+    color: #721c24;
+    border: 2px solid #dc3545;
+}
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.5em;
+    }
+    
+    .info-panel {
+        font-size: 0.9em;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+    }
+}
