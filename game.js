@@ -9,7 +9,7 @@ const GAME_DURATION = 60; // seconds
 // Game State
 let gameState = 'idle'; // idle, playing, win, lose
 let canvas, ctx;
-let player, npcs, letters, obstacles;
+let player, npcs = [], letters = [], obstacles = [];
 let targetWord = 'APPLE';
 let collectedLetters = [];
 let timeLeft = GAME_DURATION;
