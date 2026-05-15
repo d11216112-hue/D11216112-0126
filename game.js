@@ -133,7 +133,7 @@ class NPC {
         this.size = GRID_SIZE - 4;
         this.color = '#ea4335';
         this.moveCounter = 0;
-        this.moveDelay = 8; // Move every 8 frames (slower than player)
+        this.moveDelay = 15; // Move every 15 frames (much slower than player)
     }
     
     draw() {
