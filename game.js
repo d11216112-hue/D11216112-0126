@@ -9,7 +9,7 @@ const GAME_DURATION = 60; // seconds
 // Game State
 let gameState = 'idle'; // idle, playing, win, lose
 let canvas, ctx;
-let player, npcs = [], letters = [], obstacles = [];
+let player, npcs = [], letters = [], obstacles = [], powerups = [];
 let targetWord = 'APPLE';
 let collectedLetters = [];
 let timeLeft = GAME_DURATION;
@@ -18,8 +18,18 @@ let gameInterval, timerInterval;
 let grassTexture = null; // Cache for grass texture
 let wordsCompleted = 0; // Track progression for difficulty scaling
 
-// Word list for the game
-const WORD_LIST = ['APPLE', 'BANANA', 'ORANGE', 'GRAPE', 'MELON', 'PEACH', 'LEMON', 'CHERRY'];
+// Word list for the game with Chinese translations
+const WORD_LIST = [
+    { english: 'APPLE', chinese: '蘋果' },
+    { english: 'BANANA', chinese: '香蕉' },
+    { english: 'ORANGE', chinese: '橙子' },
+    { english: 'GRAPE', chinese: '葡萄' },
+    { english: 'MELON', chinese: '瓜' },
+    { english: 'PEACH', chinese: '桃子' },
+    { english: 'LEMON', chinese: '檸檬' },
+    { english: 'CHERRY', chinese: '櫻桃' }
+];
+let currentWordObj = WORD_LIST[0];
 
 // Generate grass texture once and cache it
 function generateGrassTexture() {
@@ -56,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('startBtn').addEventListener('click', startGame);
     document.getElementById('restartBtn').addEventListener('click', restartGame);
+    document.getElementById('nextLevelBtn').addEventListener('click', nextLevel);
     
     // Keyboard controls
     document.addEventListener('keydown', handleKeyPress);
@@ -315,6 +326,44 @@ class Obstacle {
     }
 }
 
+// PowerUp class for time bonuses
+class PowerUp {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = GRID_SIZE - 4;
+        this.collected = false;
+        this.timeBonus = 10; // Adds 10 seconds
+    }
+    
+    draw() {
+        if (this.collected) return;
+        
+        const px = this.x * GRID_SIZE;
+        const py = this.y * GRID_SIZE;
+        
+        // Draw clock/time power-up
+        // Outer circle (gold)
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(px + 10, py + 10, 20, 20);
+        ctx.fillRect(px + 8, py + 12, 24, 16);
+        ctx.fillRect(px + 12, py + 8, 16, 24);
+        
+        // Inner circle (white)
+        ctx.fillStyle = '#FFF';
+        ctx.fillRect(px + 14, py + 14, 12, 12);
+        
+        // Clock hands
+        ctx.fillStyle = '#000';
+        ctx.fillRect(px + 19, py + 16, 2, 6); // Hour hand
+        ctx.fillRect(px + 19, py + 20, 6, 2); // Minute hand
+        
+        // Shine effect
+        ctx.fillStyle = '#FFFF00';
+        ctx.fillRect(px + 12, py + 12, 4, 4);
+    }
+}
+
 // Helper functions
 function isObstacle(x, y) {
     return obstacles.some(obs => obs.x === x && obs.y === y);
@@ -332,6 +381,7 @@ function isPositionOccupied(x, y) {
     if (isObstacle(x, y)) return true;
     if (npcs.some(npc => npc.x === x && npc.y === y)) return true;
     if (letters.some(letter => !letter.collected && letter.x === x && letter.y === y)) return true;
+    if (powerups.some(powerup => !powerup.collected && powerup.x === x && powerup.y === y)) return true;
     return false;
 }
 
@@ -368,7 +418,8 @@ function initGame() {
     gameState = 'playing';
     
     // Select random word
-    targetWord = WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)];
+    currentWordObj = WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)];
+    targetWord = currentWordObj.english;
     
     // Create player
     const playerPos = getFreePosition();
@@ -387,6 +438,14 @@ function initGame() {
     for (let char of targetWord) {
         const pos = getFreePosition();
         letters.push(new Letter(pos.x, pos.y, char));
+    }
+    
+    // Create power-ups (2-3 time bonuses per level)
+    powerups = [];
+    const powerupCount = 2 + Math.floor(Math.random() * 2); // 2 or 3 powerups
+    for (let i = 0; i < powerupCount; i++) {
+        const pos = getFreePosition();
+        powerups.push(new PowerUp(pos.x, pos.y));
     }
     
     // Create NPCs based on progression (1-3 NPCs)
@@ -430,7 +489,32 @@ function startGame() {
 function restartGame() {
     clearInterval(gameInterval);
     clearInterval(timerInterval);
+    document.getElementById('restartBtn').style.display = 'none';
+    document.getElementById('nextLevelBtn').style.display = 'none';
     startGame();
+}
+
+// Next level
+function nextLevel() {
+    clearInterval(gameInterval);
+    clearInterval(timerInterval);
+    document.getElementById('nextLevelBtn').style.display = 'none';
+    document.getElementById('gameMessage').style.display = 'none';
+    
+    initGame();
+    
+    // Start game loop
+    gameInterval = setInterval(gameLoop, 1000 / 30); // 30 FPS
+    
+    // Start timer
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateUI();
+        
+        if (timeLeft <= 0) {
+            endGame(false, 'Time is up!');
+        }
+    }, 1000);
 }
 
 // Game loop
@@ -468,6 +552,9 @@ function gameLoop() {
     
     // Draw obstacles
     obstacles.forEach(obs => obs.draw());
+    
+    // Draw powerups
+    powerups.forEach(powerup => powerup.draw());
     
     // Draw letters
     letters.forEach(letter => letter.draw());
@@ -531,6 +618,19 @@ function checkCollisions() {
         }
     }
     
+    // Check powerup collision
+    for (let powerup of powerups) {
+        if (!powerup.collected && player.x === powerup.x && player.y === powerup.y) {
+            powerup.collected = true;
+            timeLeft += powerup.timeBonus;
+            score += 50;
+            updateUI();
+            // Show feedback message briefly
+            showMessage(`+${powerup.timeBonus} seconds!`, 'bonus');
+            return;
+        }
+    }
+    
     // Check letter collision
     for (let letter of letters) {
         if (!letter.collected && player.x === letter.x && player.y === letter.y) {
@@ -554,9 +654,22 @@ function checkCollisions() {
     }
 }
 
+// Show temporary message
+function showMessage(text, type) {
+    const messageDiv = document.getElementById('bonusMessage');
+    if (messageDiv) {
+        messageDiv.textContent = text;
+        messageDiv.className = `bonus-message ${type}`;
+        messageDiv.style.display = 'block';
+        setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, 2000);
+    }
+}
+
 // Update UI
 function updateUI() {
-    document.getElementById('targetWord').textContent = targetWord;
+    document.getElementById('targetWord').textContent = `${targetWord} (${currentWordObj.chinese})`;
     document.getElementById('collectedLetters').textContent = collectedLetters.join('') || '-';
     document.getElementById('timeLeft').textContent = timeLeft;
     document.getElementById('score').textContent = score;
@@ -575,12 +688,13 @@ function endGame(won, message) {
     messageDiv.className = won ? 'game-message win' : 'game-message lose';
     messageDiv.style.display = 'block';
     
-    document.getElementById('restartBtn').style.display = 'inline-block';
-    
     if (won) {
         score += timeLeft * 10; // Bonus for remaining time
         wordsCompleted++; // Increment word completion count for difficulty scaling
         updateUI();
+        document.getElementById('nextLevelBtn').style.display = 'inline-block';
+    } else {
+        document.getElementById('restartBtn').style.display = 'inline-block';
     }
 }
 

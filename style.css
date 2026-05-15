@@ -135,6 +135,31 @@ button:active {
     border: 2px solid #dc3545;
 }
 
+.bonus-message {
+    text-align: center;
+    font-size: 1.8em;
+    font-weight: bold;
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    display: none;
+    animation: fadeInOut 2s ease-in-out;
+}
+
+.bonus-message.bonus {
+    display: block;
+    background: #fff3cd;
+    color: #856404;
+    border: 2px solid #ffc107;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-10px); }
+    20% { opacity: 1; transform: translateY(0); }
+    80% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); }
+}
+
 @media (max-width: 768px) {
     h1 {
         font-size: 1.5em;
