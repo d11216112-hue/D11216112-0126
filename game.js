@@ -5,6 +5,7 @@ const CANVAS_HEIGHT = 600;
 const GRID_COLS = Math.floor(CANVAS_WIDTH / GRID_SIZE);
 const GRID_ROWS = Math.floor(CANVAS_HEIGHT / GRID_SIZE);
 const GAME_DURATION = 60; // seconds
+const TIME_BONUS = 10; // seconds added by power-ups
 
 // Game State
 let gameState = 'idle'; // idle, playing, win, lose
@@ -333,7 +334,7 @@ class PowerUp {
         this.y = y;
         this.size = GRID_SIZE - 4;
         this.collected = false;
-        this.timeBonus = 10; // Adds 10 seconds
+        this.timeBonus = TIME_BONUS;
     }
     
     draw() {
@@ -410,12 +411,17 @@ function getFreePosition() {
 }
 
 // Initialize game objects
-function initGame() {
+function initGame(resetProgress = true) {
     // Reset state
     collectedLetters = [];
     timeLeft = GAME_DURATION;
-    score = 0;
     gameState = 'playing';
+    
+    // Only reset score and progression on full restart
+    if (resetProgress) {
+        score = 0;
+        wordsCompleted = 0;
+    }
     
     // Select random word
     currentWordObj = WORD_LIST[Math.floor(Math.random() * WORD_LIST.length)];
@@ -442,7 +448,7 @@ function initGame() {
     
     // Create power-ups (2-3 time bonuses per level)
     powerups = [];
-    const powerupCount = 2 + Math.floor(Math.random() * 2); // 2 or 3 powerups
+    const powerupCount = Math.floor(Math.random() * 2) + 2; // 2 or 3 powerups
     for (let i = 0; i < powerupCount; i++) {
         const pos = getFreePosition();
         powerups.push(new PowerUp(pos.x, pos.y));
@@ -501,7 +507,7 @@ function nextLevel() {
     document.getElementById('nextLevelBtn').style.display = 'none';
     document.getElementById('gameMessage').style.display = 'none';
     
-    initGame();
+    initGame(false); // Don't reset score and progression
     
     // Start game loop
     gameInterval = setInterval(gameLoop, 1000 / 30); // 30 FPS
