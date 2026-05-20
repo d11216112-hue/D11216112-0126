@@ -7,6 +7,72 @@ const GRID_ROWS = Math.floor(CANVAS_HEIGHT / GRID_SIZE);
 const GAME_DURATION = 60; // seconds
 const TIME_BONUS = 10; // seconds added by power-ups
 
+// Audio Context for sound effects
+let audioContext;
+let soundEnabled = true;
+
+// Sound effect functions
+function initAudio() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+        console.log('Web Audio API not supported');
+        soundEnabled = false;
+    }
+}
+
+function playSound(type) {
+    if (!soundEnabled || !audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    switch(type) {
+        case 'collect': // Letter collection
+            oscillator.frequency.value = 523.25; // C5
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+            break;
+        case 'powerup': // Power-up collection
+            oscillator.frequency.value = 659.25; // E5
+            oscillator.type = 'square';
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+            break;
+        case 'win': // Victory
+            const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5
+            frequencies.forEach((freq, i) => {
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.frequency.value = freq;
+                osc.type = 'sine';
+                gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.15);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.4);
+                osc.start(audioContext.currentTime + i * 0.15);
+                osc.stop(audioContext.currentTime + i * 0.15 + 0.4);
+            });
+            return; // Skip the default oscillator cleanup
+        case 'lose': // Game over
+            oscillator.frequency.value = 196; // G3
+            oscillator.type = 'sawtooth';
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+            break;
+    }
+}
+
 // Game State
 let gameState = 'idle'; // idle, playing, win, lose
 let canvas, ctx;
@@ -28,7 +94,19 @@ const WORD_LIST = [
     { english: 'MELON', chinese: '瓜' },
     { english: 'PEACH', chinese: '桃子' },
     { english: 'LEMON', chinese: '檸檬' },
-    { english: 'CHERRY', chinese: '櫻桃' }
+    { english: 'CHERRY', chinese: '櫻桃' },
+    { english: 'CAT', chinese: '貓' },
+    { english: 'DOG', chinese: '狗' },
+    { english: 'FISH', chinese: '魚' },
+    { english: 'BIRD', chinese: '鳥' },
+    { english: 'TREE', chinese: '樹' },
+    { english: 'STAR', chinese: '星星' },
+    { english: 'MOON', chinese: '月亮' },
+    { english: 'SUN', chinese: '太陽' },
+    { english: 'WATER', chinese: '水' },
+    { english: 'FIRE', chinese: '火' },
+    { english: 'BOOK', chinese: '書' },
+    { english: 'PEN', chinese: '筆' }
 ];
 let currentWordObj = WORD_LIST[0];
 
@@ -61,6 +139,9 @@ function generateGrassTexture() {
 document.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
+    
+    // Initialize audio
+    initAudio();
     
     // Generate grass texture
     generateGrassTexture();
@@ -630,6 +711,7 @@ function checkCollisions() {
             powerup.collected = true;
             timeLeft += powerup.timeBonus;
             score += 50;
+            playSound('powerup');
             updateUI();
             // Show feedback message briefly
             showMessage(`+${powerup.timeBonus} seconds!`, 'bonus');
@@ -646,6 +728,7 @@ function checkCollisions() {
                 letter.collected = true;
                 collectedLetters.push(letter.char);
                 score += 100;
+                playSound('collect');
                 updateUI();
                 
                 // Check if word is complete
@@ -689,6 +772,9 @@ function endGame(won, message) {
     clearInterval(gameInterval);
     clearInterval(timerInterval);
     
+    // Play sound effect
+    playSound(won ? 'win' : 'lose');
+    
     const messageDiv = document.getElementById('gameMessage');
     messageDiv.textContent = message;
     messageDiv.className = won ? 'game-message win' : 'game-message lose';
@@ -698,10 +784,47 @@ function endGame(won, message) {
         score += timeLeft * 10; // Bonus for remaining time
         wordsCompleted++; // Increment word completion count for difficulty scaling
         updateUI();
+        
+        // Show victory screen
+        showVictoryScreen();
         document.getElementById('nextLevelBtn').style.display = 'inline-block';
     } else {
         document.getElementById('restartBtn').style.display = 'inline-block';
     }
+}
+
+// Show victory screen
+function showVictoryScreen() {
+    // Draw victory screen on canvas
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    // Victory text
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('🎉 VICTORY! 🎉', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 80);
+    
+    // Word completed
+    ctx.fillStyle = '#FFF';
+    ctx.font = 'bold 32px Arial';
+    ctx.fillText(`${targetWord} (${currentWordObj.chinese})`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+    
+    // Score info
+    ctx.font = '24px Arial';
+    ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
+    ctx.fillText(`Level: ${wordsCompleted}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 65);
+    
+    // Stars animation
+    for (let i = 0; i < 5; i++) {
+        const x = CANVAS_WIDTH / 2 - 100 + i * 50;
+        const y = CANVAS_HEIGHT / 2 + 110;
+        ctx.fillStyle = '#FFD700';
+        ctx.font = '32px Arial';
+        ctx.fillText('⭐', x, y);
+    }
+    
+    ctx.textAlign = 'left';
 }
 
 // Draw idle screen
