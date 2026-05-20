@@ -100,7 +100,7 @@ const WORD_LIST = [
     { english: 'FISH', chinese: '魚' },
     { english: 'BIRD', chinese: '鳥' },
     { english: 'TREE', chinese: '樹' },
-    { english: 'STAR', chinese: '星星' },
+    { english: 'STAR', chinese: '星' },
     { english: 'MOON', chinese: '月亮' },
     { english: 'SUN', chinese: '太陽' },
     { english: 'WATER', chinese: '水' },
