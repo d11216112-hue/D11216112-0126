@@ -617,55 +617,8 @@ function nextLevel() {
     }, 1000);
 }
 
-// Draw pause overlay
-function drawPauseOverlay() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    
-    ctx.fillStyle = '#FFF';
-    ctx.font = 'bold 48px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
-    
-    ctx.font = '24px Arial';
-    ctx.fillText('Press ESC to resume', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
-    ctx.textAlign = 'left';
-}
-
-// Pause game
-function pauseGame() {
-    if (gameState !== 'playing') return;
-    
-    gameState = 'paused';
-    clearInterval(timerInterval);
-    drawPauseOverlay();
-}
-
-// Resume game
-function resumeGame() {
-    if (gameState !== 'paused') return;
-    
-    gameState = 'playing';
-    
-    // Restart timer
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        updateUI();
-        
-        if (timeLeft <= 0) {
-            endGame(false, 'Time is up!');
-        }
-    }, 1000);
-}
-
 // Game loop
 function gameLoop() {
-    if (gameState === 'paused') {
-        // Redraw pause overlay to prevent it from disappearing
-        drawPauseOverlay();
-        return;
-    }
-    
     if (gameState !== 'playing') return;
     
     // Draw background with cached grass texture
@@ -721,17 +674,6 @@ function gameLoop() {
 
 // Handle keyboard input
 function handleKeyPress(e) {
-    // Handle ESC key for pause/resume
-    if (e.key === 'Escape') {
-        if (gameState === 'playing') {
-            pauseGame();
-        } else if (gameState === 'paused') {
-            resumeGame();
-        }
-        e.preventDefault();
-        return;
-    }
-    
     if (gameState !== 'playing') return;
     
     let moved = false;
