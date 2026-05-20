@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Word Learning Adventure</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 English Word Learning Adventure</h1>
+        
+        <div class="game-info">
+            <div class="info-panel">
+                <div class="target-word">
+                    <strong>Target Word:</strong> <span id="targetWord">APPLE</span>
+                </div>
+                <div class="collected-letters">
+                    <strong>Collected:</strong> <span id="collectedLetters">-</span>
+                </div>
+                <div class="timer">
+                    <strong>Time Left:</strong> <span id="timeLeft">60</span>s
+                </div>
+                <div class="score">
+                    <strong>Score:</strong> <span id="score">0</span>
+                </div>
+                <div class="level">
+                    <strong>Level:</strong> <span id="level">1</span> (NPCs: <span id="npcCount">1</span>)
+                </div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div class="controls">
+            <p><strong>Controls:</strong> Use Arrow Keys or WASD to move</p>
+            <p><strong>Goal:</strong> Collect letters in the correct order while avoiding NPCs!</p>
+            <p><strong>Bonus:</strong> Collect clock power-ups for extra time!</p>
+            <button id="startBtn">Start Game</button>
+            <button id="nextLevelBtn" style="display:none;">Next Level</button>
+            <button id="restartBtn" style="display:none;">Restart</button>
+        </div>
+
+        <div id="bonusMessage" class="bonus-message"></div>
+        <div id="gameMessage" class="game-message"></div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
