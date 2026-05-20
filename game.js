@@ -74,7 +74,7 @@ function playSound(type) {
 }
 
 // Game State
-let gameState = 'idle'; // idle, playing, win, lose
+let gameState = 'idle'; // idle, playing, win, lose, paused
 let canvas, ctx;
 let player, npcs = [], letters = [], obstacles = [], powerups = [];
 let targetWord = 'APPLE';
@@ -84,6 +84,7 @@ let score = 0;
 let gameInterval, timerInterval;
 let grassTexture = null; // Cache for grass texture
 let wordsCompleted = 0; // Track progression for difficulty scaling
+let pausedTimeLeft = 0; // Store time when paused
 
 // Word list for the game with Chinese translations
 const WORD_LIST = [
@@ -458,6 +459,11 @@ function getRandomPosition() {
     };
 }
 
+// Calculate Manhattan distance between two positions
+function getDistance(x1, y1, x2, y2) {
+    return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+}
+
 function isPositionOccupied(x, y) {
     if (player && player.x === x && player.y === y) return true;
     if (isObstacle(x, y)) return true;
@@ -467,7 +473,7 @@ function isPositionOccupied(x, y) {
     return false;
 }
 
-function getFreePosition() {
+function getFreePosition(minDistanceFromPlayer = 0) {
     let pos;
     let attempts = 0;
     const maxAttempts = 100;
@@ -479,7 +485,10 @@ function getFreePosition() {
             // Scan grid for first free position as last resort
             for (let y = 0; y < GRID_ROWS; y++) {
                 for (let x = 0; x < GRID_COLS; x++) {
-                    if (!isPositionOccupied(x, y)) {
+                    const isFree = !isPositionOccupied(x, y);
+                    const farEnough = !player || minDistanceFromPlayer === 0 || 
+                                     getDistance(x, y, player.x, player.y) >= minDistanceFromPlayer;
+                    if (isFree && farEnough) {
                         return { x, y };
                     }
                 }
@@ -487,7 +496,11 @@ function getFreePosition() {
             // If truly no space, return random (edge case)
             return getRandomPosition();
         }
-    } while (isPositionOccupied(pos.x, pos.y));
+        
+        const isFree = !isPositionOccupied(pos.x, pos.y);
+        const farEnough = !player || minDistanceFromPlayer === 0 || 
+                         getDistance(pos.x, pos.y, player.x, player.y) >= minDistanceFromPlayer;
+    } while (!isFree || !farEnough);
     return pos;
 }
 
@@ -536,10 +549,11 @@ function initGame(resetProgress = true) {
     }
     
     // Create NPCs based on progression (1-3 NPCs)
+    // NPCs must spawn at least 5 grid cells away from player
     npcs = [];
     const npcCount = Math.min(1 + Math.floor(wordsCompleted / 2), 3); // Start with 1, add 1 every 2 words, max 3
     for (let i = 0; i < npcCount; i++) {
-        const pos = getFreePosition();
+        const pos = getFreePosition(5); // Minimum 5 cells away from player
         npcs.push(new NPC(pos.x, pos.y));
     }
     
@@ -594,6 +608,44 @@ function nextLevel() {
     gameInterval = setInterval(gameLoop, 1000 / 30); // 30 FPS
     
     // Start timer
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateUI();
+        
+        if (timeLeft <= 0) {
+            endGame(false, 'Time is up!');
+        }
+    }, 1000);
+}
+
+// Pause game
+function pauseGame() {
+    if (gameState !== 'playing') return;
+    
+    gameState = 'paused';
+    clearInterval(timerInterval);
+    
+    // Draw pause overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    ctx.fillStyle = '#FFF';
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('PAUSED', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+    
+    ctx.font = '24px Arial';
+    ctx.fillText('Press ESC to resume', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
+    ctx.textAlign = 'left';
+}
+
+// Resume game
+function resumeGame() {
+    if (gameState !== 'paused') return;
+    
+    gameState = 'playing';
+    
+    // Restart timer
     timerInterval = setInterval(() => {
         timeLeft--;
         updateUI();
@@ -661,6 +713,17 @@ function gameLoop() {
 
 // Handle keyboard input
 function handleKeyPress(e) {
+    // Handle ESC key for pause/resume
+    if (e.key === 'Escape') {
+        if (gameState === 'playing') {
+            pauseGame();
+        } else if (gameState === 'paused') {
+            resumeGame();
+        }
+        e.preventDefault();
+        return;
+    }
+    
     if (gameState !== 'playing') return;
     
     let moved = false;
