@@ -84,7 +84,6 @@ let score = 0;
 let gameInterval, timerInterval;
 let grassTexture = null; // Cache for grass texture
 let wordsCompleted = 0; // Track progression for difficulty scaling
-let pausedTimeLeft = 0; // Store time when paused
 
 // Word list for the game with Chinese translations
 const WORD_LIST = [
@@ -618,14 +617,8 @@ function nextLevel() {
     }, 1000);
 }
 
-// Pause game
-function pauseGame() {
-    if (gameState !== 'playing') return;
-    
-    gameState = 'paused';
-    clearInterval(timerInterval);
-    
-    // Draw pause overlay
+// Draw pause overlay
+function drawPauseOverlay() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
@@ -637,6 +630,15 @@ function pauseGame() {
     ctx.font = '24px Arial';
     ctx.fillText('Press ESC to resume', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
     ctx.textAlign = 'left';
+}
+
+// Pause game
+function pauseGame() {
+    if (gameState !== 'playing') return;
+    
+    gameState = 'paused';
+    clearInterval(timerInterval);
+    drawPauseOverlay();
 }
 
 // Resume game
@@ -658,6 +660,12 @@ function resumeGame() {
 
 // Game loop
 function gameLoop() {
+    if (gameState === 'paused') {
+        // Redraw pause overlay to prevent it from disappearing
+        drawPauseOverlay();
+        return;
+    }
+    
     if (gameState !== 'playing') return;
     
     // Draw background with cached grass texture
